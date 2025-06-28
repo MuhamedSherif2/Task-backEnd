@@ -4,23 +4,30 @@ const jwt = require('jsonwebtoken')
 
 exports.Register = async function (req, res) {
     try {
-        let newUser = new UserModel(req.body)
-        console.log(newUser)
-        let hashedPassword = await bcrypt.hash(req.body.password, 10)
-        newUser.password = hashedPassword
-        let user = await newUser.save()
+        const { name, email, password, role } = req.body;
+
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({ message: 'Name, email, password, and role are required.' });
+        }
+
+        let hashedPassword = await bcrypt.hash(password, 10);
+
+        let newUser = new UserModel({ name, email, password: hashedPassword, role });
+        let user = await newUser.save();
+
         res.json({
-            message: 'User registered successfully', user: {
+            message: 'User registered successfully',
+            user: {
                 email: user.email,
-                name: user.name
+                name: user.name,
+                role: user.role
             }
-        })
+        });
     } catch (error) {
-        res.status(404).send({
-            message: error.stack
-        })
+        res.status(500).json({ message: error.stack });
     }
 }
+
 
 exports.showName = async function (req, res) {
     try {
