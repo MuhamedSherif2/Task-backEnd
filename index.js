@@ -15,8 +15,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 mongoose.connect('mongodb+srv://Mag:mohammed26122003@mohammed.kxps2xh.mongodb.net/?appName=Mohammed')
-  .then(() => console.log('MongoDB connected'))
-  .catch((error) => console.log(`MongoDB Error: ${error}`)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ Connection error:', err)
 );
 
 app.use('/', userRouter);
