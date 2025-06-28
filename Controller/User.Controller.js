@@ -1,31 +1,28 @@
-const UserModel = require('../Model/User.Model');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const UserModel = require('../Model/User.Model')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 exports.Register = async function (req, res) {
     try {
+        console.log("📥 Register endpoint hit");
+        console.log("➡️ Request body:", req.body);
+
         const { name, email, password, role } = req.body;
 
         if (!name || !email || !password || !role) {
             return res.status(400).json({ message: 'Name, email, password, and role are required.' });
         }
 
-        const nameClean = name.trim();
         const emailClean = email.trim().toLowerCase();
-
+        const nameClean = name.trim();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new UserModel({
-            name: nameClean,
-            email: emailClean,
-            password: hashedPassword,
-            role
-        });
+        const newUser = new UserModel({ name: nameClean, email: emailClean, password: hashedPassword, role });
+        const user = await newUser.save(); // ← هنا تم تعريفه
 
-        const user = await newUser.save();
-        console.log("✅ User saved:", user);
+        console.log("✅ User saved to DB:", user);
 
-        res.json({
+        return res.json({
             message: 'User registered successfully',
             user: {
                 email: user.email,
@@ -34,34 +31,52 @@ exports.Register = async function (req, res) {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: error.stack });
+        console.error("❌ Error in Register:", error);
+        return res.status(500).json({ message: error.stack });
     }
 };
+
+
+exports.showName = async function (req, res) {
+    try {
+        const userName = await UserModel.find({ user: req.user._id })
+        res.json({
+            userName, user: {
+                name: user.name,
+            }
+        })
+    } catch (error) {
+        res.status(404).send({
+            message: error.stack
+        })
+    }
+}
 
 exports.Login = async function (req, res) {
     try {
-        const emailClean = req.body.email.trim().toLowerCase();
-        const user = await UserModel.findOne({ email: emailClean });
-
+        let user = await UserModel.findOne({ email: req.body.email })
         if (!user || !await user.comparePassword(req.body.password)) {
-            return res.status(400).send({ message: 'Invalid email or password' });
-        }
-
-        const token = jwt.sign({
-            email: user.email,
-            _id: user._id,
-            role: user.role
-        }, 'secretKey');
-
-        return res.json({
-            message: 'Login successful',
-            user: {
+            res.status(400).send({ massage: 'invalid email or password' })
+        } else {
+            const token = jwt.sign({
                 email: user.email,
-                name: user.name,
-                jwt: token
-            }
-        });
+                _id: user._id,
+                role: user.role
+            },
+                'secretKey'
+            )
+            return res.json({
+                message: 'Login successful',
+                user: {
+                    email: user.email,
+                    name: user.name,
+                    jwt: token
+                }
+            })
+        }
     } catch (error) {
-        res.status(400).send({ message: error.stack });
+        res.status(400).send({
+            message: error.stack
+        })
     }
-};
+}
