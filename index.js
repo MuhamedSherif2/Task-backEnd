@@ -14,13 +14,16 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-mongoose.connect('mongodb+srv://Mag:mohammed26122003@mohammed.kxps2xh.mongodb.net/?appName=Mohammed')
+mongoose.connect(process.env.MONGOO_URL)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ Connection error:', err)
 );
 
 app.use('/', userRouter);
 app.use('/', taskRouter);
+app.get('/', (req, res) => {
+  res.send('API is working 🌟');
+});
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`server run on port: ${port}`))
