@@ -4,9 +4,6 @@ const jwt = require('jsonwebtoken')
 
 exports.Register = async function (req, res) {
     try {
-        console.log("📥 Register endpoint hit");
-        console.log("➡️ Request body:", req.body);
-
         const { name, email, password, role } = req.body;
 
         if (!name || !email || !password || !role) {
@@ -18,9 +15,7 @@ exports.Register = async function (req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new UserModel({ name: nameClean, email: emailClean, password: hashedPassword, role });
-        const user = await newUser.save(); // ← هنا تم تعريفه
-
-        console.log("✅ User saved to DB:", user);
+        const user = await newUser.save();
 
         return res.json({
             message: 'User registered successfully',
@@ -36,21 +31,24 @@ exports.Register = async function (req, res) {
     }
 };
 
-
 exports.showName = async function (req, res) {
     try {
-        const userName = await UserModel.find({ user: req.user._id })
+        const user = await UserModel.findOne({ _id: req.user._id });
+        
+        if (!user) {
+            return res.status(404).json({ message: "المستخدم غير موجود" });
+        }
+
         res.json({
-            userName, user: {
-                name: user.name,
-            }
-        })
+            name: user.name 
+        });
     } catch (error) {
-        res.status(404).send({
-            message: error.stack
-        })
+        res.status(500).json({
+            message: "حدث خطأ في السيرفر",
+            error: error.message
+        });
     }
-}
+};
 
 exports.Login = async function (req, res) {
     try {
