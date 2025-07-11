@@ -34,17 +34,12 @@ exports.Register = async function (req, res) {
 exports.showName = async function (req, res) {
     try {
         const user = await UserModel.findOne({ _id: req.user._id });
-        
-        if (!user) {
-            return res.status(404).json({ message: "المستخدم غير موجود" });
-        }
-
-        res.json({
-            name: user.name 
+        res.status(200).json({
+            name: user?.name || null
         });
     } catch (error) {
         res.status(500).json({
-            message: "حدث خطأ في السيرفر",
+            message: "Backend error",
             error: error.message
         });
     }
